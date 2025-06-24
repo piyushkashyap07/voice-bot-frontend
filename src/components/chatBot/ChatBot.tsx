@@ -178,84 +178,109 @@ const ChatBot = () => {
 
   return (
     <div className="voice-text-interface">
-      {viewMode === "voice" ? (
-        <div className="voice-screen">
-          {loader3 ? (
-            <div className="loader2"></div>
-          ) : loader2 ? (
-            <img src={PLACEHOLDER_ANIMATED} width="300" height="300" alt="AI Assistant Speaking" />
-          ) : (
-            <>
-              <img src={PLACEHOLDER_STATIC} width="250" height="250" alt="AI Assistant" />
-              <div className="visualizer-container" id="visualizer">
-                <div className="visualizer-circle"></div>
-                <div className="visualizer-circle"></div>
-                <div className="visualizer-circle"></div>
-              </div>
-            </>
-          )}
-
-          <div className="chatbotvoices">
-            <p className="speaker-title" style={{ marginTop: "100px" }}>
-              {isRecording ? "Listening..." : "Click the microphone to start speaking"}
-            </p>
-            <div style={{ display: "flex" }}>
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`mic-btn ${isRecording ? "listening" : ""}`}
-              >
-                <FaMicrophone style={{ fontSize: "22px" }} />
-              </button>
-              {isBotSpeaking && (
-                <button onClick={stopSpeaking} className="mic-btn stop">
-                  <FaStop style={{ fontSize: "22px" }} />
+      <div className="chat-card">
+        <div className="header">
+          <div className="header-avatar" aria-label="Bot Avatar" title="AI Bot">🤖</div>
+          <div>
+            <div className="header-title">AI ChatBot</div>
+            <div className="header-tagline">Your smart assistant</div>
+          </div>
+        </div>
+        {viewMode === "voice" ? (
+          <div className="voice-screen" style={{ flex: 1, justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
+            {loader3 ? (
+              <div className="loader2"></div>
+            ) : loader2 ? (
+              <img src={PLACEHOLDER_ANIMATED} width="180" height="180" alt="AI Assistant Speaking" style={{ borderRadius: '50%', boxShadow: '0 2px 16px rgba(99,102,241,0.12)' }} />
+            ) : (
+              <>
+                <img src={PLACEHOLDER_STATIC} width="140" height="140" alt="AI Assistant" style={{ borderRadius: '50%', boxShadow: '0 2px 16px rgba(99,102,241,0.12)' }} />
+                <div className="visualizer-container" id="visualizer">
+                  <div className="visualizer-circle"></div>
+                  <div className="visualizer-circle"></div>
+                  <div className="visualizer-circle"></div>
+                </div>
+              </>
+            )}
+            <div className="chatbotvoices" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 10 }}>
+              <p className="speaker-title" style={{ marginTop: 30 }}>
+                {isRecording ? "Listening..." : "Click the microphone to start speaking"}
+              </p>
+              <div style={{ display: "flex" }}>
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`mic-btn ${isRecording ? "listening" : ""}`}
+                  aria-label={isRecording ? "Stop Recording" : "Start Recording"}
+                >
+                  <FaMicrophone style={{ fontSize: "22px" }} />
                 </button>
+                {isBotSpeaking && (
+                  <button onClick={stopSpeaking} className="mic-btn stop" aria-label="Stop Speaking">
+                    <FaStop style={{ fontSize: "22px" }} />
+                  </button>
+                )}
+              </div>
+              <button onClick={() => setViewMode("chat")}
+                className="toggle-view-btn"
+                style={{ marginTop: 18 }}
+              >
+                View Conversation History
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="chat-screen" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div className="conversation-container" ref={conversationContainerRef}>
+              {conversationHistory.map((msg, index) => (
+                <div key={index} className={`message ${msg.speaker}-message`}>
+                  <div className="message-header">
+                    {msg.speaker === "user" ? "You" : "Bot"} • {msg.time}
+                  </div>
+                  <div className="message-bubble">{msg.text}</div>
+                  {msg.audio && <audio controls src={msg.audio}></audio>}
+                </div>
+              ))}
+              {loader1 && <div className="loader"></div>}
+              {/* Typing indicator for bot */}
+              {loader1 && (
+                <div className="message bot-message">
+                  <div className="message-header">Bot is typing...</div>
+                  <div className="message-bubble" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span className="visualizer-circle" style={{ width: 8, height: 8 }}></span>
+                    <span className="visualizer-circle" style={{ width: 8, height: 8 }}></span>
+                    <span className="visualizer-circle" style={{ width: 8, height: 8 }}></span>
+                  </div>
+                </div>
               )}
             </div>
-            <button onClick={() => setViewMode("chat")} className="toggle-view-btn">
-              View Conversation History
-            </button>
+            <div className="text-input-container">
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="text-input"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !loader1) {
+                    sendMessage();
+                  }
+                }}
+              />
+              <button onClick={sendMessage} className="send-btn" disabled={loader1 || !message.trim()} aria-label="Send Message">
+                <IoSendSharp style={{ fontSize: "20px" }} />
+              </button>
+              <button
+                onClick={() => setViewMode("voice")}
+                className="mic-btn"
+                style={{ marginLeft: 4 }}
+                aria-label="Switch to Voice Mode"
+              >
+                <FaMicrophone style={{ fontSize: "20px" }} />
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="chat-screen">
-          <div className="header">
-            <button onClick={() => setViewMode("voice")} className="back-btn">
-              Back to Voice Mode
-            </button>
-            <div className="header-title">Conversation History</div>
-          </div>
-          <div className="conversation-container" ref={conversationContainerRef}>
-            {conversationHistory.map((msg, index) => (
-              <div key={index} className={`message ${msg.speaker}-message`}>
-                <div className="message-header">
-                  {msg.speaker === "user" ? "You" : "Bot"} • {msg.time}
-                </div>
-                <div className="message-bubble">{msg.text}</div>
-                {msg.audio && <audio controls src={msg.audio}></audio>}
-              </div>
-            ))}
-            {loader1 && <div className="loader"></div>}
-          </div>
-          <div className="text-input-container">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message..."
-              className="text-input"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !loader1) {
-                  sendMessage();
-                }
-              }}
-            />
-            <button onClick={sendMessage} className="send-btn" disabled={loader1}>
-              <IoSendSharp style={{ fontSize: "20px" }} />
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
